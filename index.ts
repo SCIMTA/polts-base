@@ -43,18 +43,18 @@ const alice = keyring.addFromUri('//Alice', { name: 'Alice default' });
 const bob = keyring.addFromAddress('5FHneW46xGXgs5mUiveU4sbTyGBzmstUspZC92UhjJM694ty', { name: 'Bob' });
 
 console.log('====================================');
-const txHash = await new Promise((resolve, reject) => {
-  api.tx.balances
-    .transfer(bob.address, 12345)
-    .signAndSend(alice, ({ status }) => {
-      if (status.isInBlock) {
-        resolve(console.log(`inblock ` + status.asInBlock.toHex()));
-      } else if (status.isFinalized) {
-        resolve(console.log(`finalize ` + status.asFinalized.toHex()));
-      }
-    })
-    .catch(reject);
-});
+// const txHash = await new Promise((resolve, reject) => {
+//   api.tx.balances
+//     .transfer(bob.address, 12345)
+//     .signAndSend(alice, ({ status }) => {
+//       if (status.isInBlock) {
+//         resolve(console.log(`inblock ` + status.asInBlock.toHex()));
+//       } else if (status.isFinalized) {
+//         resolve(console.log(`finalize ` + status.asFinalized.toHex()));
+//       }
+//     })
+//     .catch(reject);
+// });
 
 // Show the hash
 // console.log(`Submitted with hash ${txHash}`);
@@ -73,8 +73,53 @@ const txHash = await new Promise((resolve, reject) => {
 //     }
 //   });
 
+console.log('====================================');
 
-const resC = await api.tx.dao.callBallances(alice).signAndSend(alice);
+// const resC = await api.tx.dao.getCurrentTime().signAndSend(alice, (result) => {
+//   console.log(`Current status is ${result.status}`);
+
+//   if (result.status.isInBlock) {
+//     console.log(`Transaction included at blockHash ${result.status.asInBlock}`);
+//   } else if (result.status.isFinalized) {
+//     console.log(`Transaction finalized at blockHash ${result.status.asFinalized}`);
+
+//     // unsub();
+//   }
+// });
+
+const resC = await new Promise((resolve, reject) => {
+  api.tx.dao
+    .getCurrentTime()
+    .signAndSend(alice, ({ status }) => {
+      // console.log(`Current status is ${status}`);
+      if (status.isInBlock) {
+        console.log(`inblock ` + status.asInBlock.toHex());
+      } else if (status.isFinalized) {
+        resolve(console.log(`finalize ` + status.asFinalized.toHex()));
+      }
+    })
+    .catch(reject);
+});
+
 console.log('====================================');
-console.log("restC: " + resC);
+// const info2 = await api.query.system.account(ADDR);
+// console.log(`${now}: balance of ${info2.data.free} and a nonce of ${info2.nonce}`);
+
+const hashData = await Promise.all([
+  api.rpc.chain.getBlock('0xa808fcf52bf7261192880ecd3ba2989f12078af1cac8893a9cbb7bb3025c6a9b')
+])
+
+console.log("hash data: " + hashData[0].block.extrinsics);
+
 console.log('====================================');
+
+// const binfo = await api.query.system.blockHash(0xc475ea27099a6ebedbeb8babf3b524ef1b1230ebe703c1e1b21a191badaacdb0);
+// console.log('====================================');
+// console.log("restC: " + binfo);
+// console.log('====================================');
+
+hashData[0].block.extrinsics.forEach((ex, index) => {
+  console.log("----------------extrinsics----------------");
+  console.log(index, ex.toHuman());
+
+})
